@@ -126,7 +126,12 @@ const Inventory = () => {
     });
   };
 
-  const handleStockAdjustment = (id: string, adjustment: number) => {
+  const handleStockAdjustment = (id: string, type: 'add' | 'remove') => {
+    const amount = prompt(`Enter ${type === 'add' ? 'amount to add' : 'amount to remove'}:`);
+    if (!amount || isNaN(Number(amount))) return;
+    
+    const adjustment = type === 'add' ? Number(amount) : -Number(amount);
+    
     setInventory(inventory.map(item => {
       if (item.id === id) {
         const newQuantity = Math.max(0, item.quantity + adjustment);
@@ -139,6 +144,44 @@ const Inventory = () => {
     toast({
       title: "Success",
       description: `Stock ${adjustment > 0 ? 'added' : 'reduced'} successfully.`
+    });
+  };
+
+  const handleEditItem = (item: InventoryItem) => {
+    setEditingItem(item);
+    setNewItem({
+      item: item.item,
+      quantity: item.quantity,
+      unit: item.unit,
+      expiry: item.expiry,
+      location: item.location
+    });
+  };
+
+  const handleUpdateItem = () => {
+    if (!editingItem || !newItem.item || !newItem.quantity || !newItem.unit) {
+      toast({
+        title: "Error",
+        description: "Please fill in all required fields.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const status = newItem.quantity > 20 ? 'In Stock' : newItem.quantity > 0 ? 'Low Stock' : 'Out of Stock';
+    
+    setInventory(inventory.map(item => 
+      item.id === editingItem.id 
+        ? { ...editingItem, ...newItem, status }
+        : item
+    ));
+    
+    setEditingItem(null);
+    setNewItem({ item: '', quantity: 0, unit: '', expiry: '', location: '' });
+    
+    toast({
+      title: "Success",
+      description: "Item updated successfully."
     });
   };
 
@@ -161,7 +204,7 @@ const Inventory = () => {
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Add New Inventory Item</DialogTitle>
+              <DialogTitle>{editingItem ? 'Edit Inventory Item' : 'Add New Inventory Item'}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <div>
@@ -212,8 +255,8 @@ const Inventory = () => {
                   placeholder="Storage location"
                 />
               </div>
-              <Button onClick={handleAddItem} className="w-full">
-                Add Item
+              <Button onClick={editingItem ? handleUpdateItem : handleAddItem} className="w-full">
+                {editingItem ? 'Update Item' : 'Add Item'}
               </Button>
             </div>
           </DialogContent>
@@ -265,18 +308,25 @@ const Inventory = () => {
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => handleStockAdjustment(item.id, 10)}
+                        onClick={() => handleStockAdjustment(item.id, 'add')}
                       >
-                        +10
+                        Add Stock
                       </Button>
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => handleStockAdjustment(item.id, -10)}
+                        onClick={() => handleStockAdjustment(item.id, 'remove')}
                       >
-                        -10
+                        Remove Stock
                       </Button>
-                      <Button size="sm" variant="outline">
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => {
+                          handleEditItem(item);
+                          setIsAddDialogOpen(true);
+                        }}
+                      >
                         <Edit className="h-4 w-4" />
                       </Button>
                       <Button

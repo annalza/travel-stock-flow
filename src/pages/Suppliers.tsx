@@ -6,7 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Plus, Users, Edit, Trash2, Phone, Mail, MapPin } from 'lucide-react';
+import { Plus, Users, Edit, Trash2, Phone, Mail, MapPin, Search } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface Supplier {
@@ -24,6 +24,7 @@ const Suppliers = () => {
   const { toast } = useToast();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingSupplier, setEditingSupplier] = useState<Supplier | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
 
   const [suppliers, setSuppliers] = useState<Supplier[]>([
     {
@@ -164,6 +165,13 @@ const Suppliers = () => {
     });
   };
 
+  const filteredSuppliers = suppliers.filter(supplier =>
+    supplier.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    supplier.contactPerson.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    supplier.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    supplier.email.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   const resetForm = () => {
     setNewSupplier({
       name: '',
@@ -298,10 +306,21 @@ const Suppliers = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center">
-            <Users className="h-5 w-5 mr-2" />
-            Suppliers ({suppliers.length})
-          </CardTitle>
+          <div className="flex justify-between items-center">
+            <CardTitle className="flex items-center">
+              <Users className="h-5 w-5 mr-2" />
+              Suppliers ({suppliers.length})
+            </CardTitle>
+            <div className="flex items-center space-x-2">
+              <Search className="h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search suppliers..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-64"
+              />
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           <Table>
@@ -316,7 +335,7 @@ const Suppliers = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {suppliers.map((supplier) => (
+              {filteredSuppliers.map((supplier) => (
                 <TableRow key={supplier.id}>
                   <TableCell>
                     <div>

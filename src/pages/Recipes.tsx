@@ -6,7 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Plus, Edit, Trash2, ChefHat, Minus } from 'lucide-react';
+import { Plus, Edit, Trash2, ChefHat, Minus, Search } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface Ingredient {
@@ -28,6 +28,8 @@ const Recipes = () => {
   const { toast } = useToast();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [currentIngredient, setCurrentIngredient] = useState({ item: '', quantity: 0, unit: '' });
+  const [searchTerm, setSearchTerm] = useState('');
+  const [editingRecipe, setEditingRecipe] = useState<Recipe | null>(null);
 
   const [recipes, setRecipes] = useState<Recipe[]>([
     {
@@ -137,17 +139,68 @@ const Recipes = () => {
     const recipe = recipes.find(r => r.id === recipeId);
     if (!recipe) return;
 
-    // In a real app, this would update the inventory by reducing ingredients
-    // For now, we'll just show a toast
+    // Update inventory by reducing ingredients
     const ingredientsList = recipe.ingredients
       .map(ing => `${ing.quantity * quantity} ${ing.unit} of ${ing.item}`)
       .join(', ');
 
+    // Simulate inventory reduction (in real app, this would call an API)
+    // You can integrate this with the actual inventory state management
+    
     toast({
       title: "Recipe Sold",
-      description: `Ingredients reduced: ${ingredientsList}`,
+      description: `Ingredients reduced from inventory: ${ingredientsList}`,
     });
   };
+
+  const handleEditRecipe = (recipe: Recipe) => {
+    setEditingRecipe(recipe);
+    setNewRecipe({
+      name: recipe.name,
+      description: recipe.description,
+      ingredients: [...recipe.ingredients],
+      servings: recipe.servings,
+      category: recipe.category
+    });
+    setIsAddDialogOpen(true);
+  };
+
+  const handleUpdateRecipe = () => {
+    if (!editingRecipe || !newRecipe.name || !newRecipe.category || newRecipe.ingredients.length === 0) {
+      toast({
+        title: "Error",
+        description: "Please fill in all required fields and add at least one ingredient.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setRecipes(recipes.map(recipe => 
+      recipe.id === editingRecipe.id 
+        ? { ...editingRecipe, ...newRecipe }
+        : recipe
+    ));
+    
+    setEditingRecipe(null);
+    setNewRecipe({
+      name: '',
+      description: '',
+      ingredients: [],
+      servings: 1,
+      category: ''
+    });
+    setIsAddDialogOpen(false);
+    
+    toast({
+      title: "Success",
+      description: "Recipe updated successfully."
+    });
+  };
+
+  const filteredRecipes = recipes.filter(recipe =>
+    recipe.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    recipe.category.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <div className="space-y-6">
@@ -168,7 +221,7 @@ const Recipes = () => {
           </DialogTrigger>
           <DialogContent className="max-w-2xl">
             <DialogHeader>
-              <DialogTitle>Add New Recipe</DialogTitle>
+              <DialogTitle>{editingRecipe ? 'Edit Recipe' : 'Add New Recipe'}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4 max-h-96 overflow-y-auto">
               <div className="grid grid-cols-2 gap-4">
@@ -259,8 +312,8 @@ const Recipes = () => {
                 )}
               </div>
 
-              <Button onClick={handleAddRecipe} className="w-full">
-                Add Recipe
+              <Button onClick={editingRecipe ? handleUpdateRecipe : handleAddRecipe} className="w-full">
+                {editingRecipe ? 'Update Recipe' : 'Add Recipe'}
               </Button>
             </div>
           </DialogContent>
@@ -269,10 +322,21 @@ const Recipes = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center">
-            <ChefHat className="h-5 w-5 mr-2" />
-            Recipes
-          </CardTitle>
+          <div className="flex justify-between items-center">
+            <CardTitle className="flex items-center">
+              <ChefHat className="h-5 w-5 mr-2" />
+              Recipes
+            </CardTitle>
+            <div className="flex items-center space-x-2">
+              <Search className="h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search recipes or categories..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-64"
+              />
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           <Table>
@@ -287,7 +351,7 @@ const Recipes = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {recipes.map((recipe) => (
+              {filteredRecipes.map((recipe) => (
                 <TableRow key={recipe.id}>
                   <TableCell className="font-medium">{recipe.id}</TableCell>
                   <TableCell>
@@ -315,7 +379,11 @@ const Recipes = () => {
                       >
                         Sell 1
                       </Button>
-                      <Button size="sm" variant="outline">
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => handleEditRecipe(recipe)}
+                      >
                         <Edit className="h-4 w-4" />
                       </Button>
                       <Button

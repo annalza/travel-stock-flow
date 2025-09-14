@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, ShoppingCart, Eye } from 'lucide-react';
+import { Plus, ShoppingCart, Eye, Search } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface ProcurementOrder {
@@ -17,7 +17,7 @@ interface ProcurementOrder {
   quantity: number;
   unit: string;
   supplier: string;
-  priority: 'Low' | 'Medium' | 'High' | 'Urgent';
+  
   status: 'Pending' | 'Approved' | 'Rejected';
   dateRequested: string;
   notes: string;
@@ -28,6 +28,7 @@ const Procurement = () => {
   const { toast } = useToast();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<ProcurementOrder | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
 
   const [orders, setOrders] = useState<ProcurementOrder[]>([
     {
@@ -36,7 +37,7 @@ const Procurement = () => {
       quantity: 20,
       unit: 'kg',
       supplier: 'Ocean Fresh Supplies',
-      priority: 'High',
+      
       status: 'Pending',
       dateRequested: '2024-01-08',
       notes: 'Need for weekend special menu'
@@ -47,7 +48,6 @@ const Procurement = () => {
       quantity: 50,
       unit: 'kg',
       supplier: 'Green Valley Farms',
-      priority: 'Medium',
       status: 'Approved',
       dateRequested: '2024-01-07',
       notes: 'Weekly vegetable order'
@@ -58,7 +58,7 @@ const Procurement = () => {
       quantity: 24,
       unit: 'bottles',
       supplier: 'Premium Wine Co.',
-      priority: 'Low',
+      
       status: 'Rejected',
       dateRequested: '2024-01-06',
       notes: 'For wine tasting event',
@@ -71,7 +71,7 @@ const Procurement = () => {
     quantity: 0,
     unit: '',
     supplier: '',
-    priority: 'Medium' as const,
+    
     notes: ''
   });
 
@@ -96,20 +96,12 @@ const Procurement = () => {
     }
   };
 
-  const getPriorityBadge = (priority: string) => {
-    switch (priority) {
-      case 'Urgent':
-        return <Badge variant="destructive">{priority}</Badge>;
-      case 'High':
-        return <Badge className="bg-warning text-warning-foreground">{priority}</Badge>;
-      case 'Medium':
-        return <Badge variant="secondary">{priority}</Badge>;
-      case 'Low':
-        return <Badge variant="outline">{priority}</Badge>;
-      default:
-        return <Badge variant="secondary">{priority}</Badge>;
-    }
-  };
+
+  const filteredOrders = orders.filter(order =>
+    order.itemName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    order.supplier.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    order.status.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   const handleAddOrder = () => {
     if (!newOrder.itemName || !newOrder.quantity || !newOrder.unit || !newOrder.supplier) {
@@ -134,7 +126,6 @@ const Procurement = () => {
       quantity: 0,
       unit: '',
       supplier: '',
-      priority: 'Medium',
       notes: ''
     });
     setIsAddDialogOpen(false);
@@ -215,20 +206,6 @@ const Procurement = () => {
                 </Select>
               </div>
 
-              <div>
-                <Label htmlFor="priority">Priority</Label>
-                <Select value={newOrder.priority} onValueChange={(value: any) => setNewOrder({ ...newOrder, priority: value })}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select priority" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Low">Low</SelectItem>
-                    <SelectItem value="Medium">Medium</SelectItem>
-                    <SelectItem value="High">High</SelectItem>
-                    <SelectItem value="Urgent">Urgent</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
 
               <div>
                 <Label htmlFor="notes">Notes</Label>
@@ -251,10 +228,21 @@ const Procurement = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center">
-            <ShoppingCart className="h-5 w-5 mr-2" />
-            Orders
-          </CardTitle>
+          <div className="flex justify-between items-center">
+            <CardTitle className="flex items-center">
+              <ShoppingCart className="h-5 w-5 mr-2" />
+              Orders
+            </CardTitle>
+            <div className="flex items-center space-x-2">
+              <Search className="h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search orders..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-64"
+              />
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           <Table>
@@ -264,20 +252,20 @@ const Procurement = () => {
                 <TableHead>Item</TableHead>
                 <TableHead>Quantity</TableHead>
                 <TableHead>Supplier</TableHead>
-                <TableHead>Priority</TableHead>
+                
                 <TableHead>Status</TableHead>
                 <TableHead>Date</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {orders.map((order) => (
+              {filteredOrders.map((order) => (
                 <TableRow key={order.id}>
                   <TableCell className="font-medium">{order.id}</TableCell>
                   <TableCell>{order.itemName}</TableCell>
                   <TableCell>{order.quantity} {order.unit}</TableCell>
                   <TableCell>{order.supplier}</TableCell>
-                  <TableCell>{getPriorityBadge(order.priority)}</TableCell>
+                  
                   <TableCell>{getStatusBadge(order.status)}</TableCell>
                   <TableCell>{order.dateRequested}</TableCell>
                   <TableCell>
@@ -312,10 +300,6 @@ const Procurement = () => {
                               <div>
                                 <Label>Quantity</Label>
                                 <p className="text-sm font-medium">{selectedOrder.quantity} {selectedOrder.unit}</p>
-                              </div>
-                              <div>
-                                <Label>Priority</Label>
-                                <div className="mt-1">{getPriorityBadge(selectedOrder.priority)}</div>
                               </div>
                             </div>
                             <div>
