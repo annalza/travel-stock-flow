@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
-import { Package, ChefHat, ShoppingCart, UserCheck, Users, BarChart3 } from 'lucide-react';
+import { Package, ChefHat, ShoppingCart, Users, BarChart3, FileText, UserCheck } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const Layout = () => {
@@ -9,8 +9,12 @@ const Layout = () => {
     { name: 'Inventory', href: '/inventory', icon: Package },
     { name: 'Recipes', href: '/recipes', icon: ChefHat },
     { name: 'Procurement', href: '/procurement', icon: ShoppingCart },
-    { name: 'Admin', href: '/admin', icon: UserCheck },
     { name: 'Suppliers', href: '/suppliers', icon: Users },
+    { name: 'Reports', href: '/reports', icon: FileText },
+  ];
+
+  const adminNavigation = [
+    { name: 'Admin', href: '/admin', icon: UserCheck },
   ];
 
   return (
@@ -22,24 +26,51 @@ const Layout = () => {
             <Package className="h-8 w-8 text-primary" />
             <span className="ml-2 text-xl font-bold text-foreground">HospitalityERP</span>
           </div>
-          <nav className="flex-1 px-4 py-6 space-y-2">
-            {navigation.map((item) => (
-              <NavLink
-                key={item.name}
-                to={item.href}
-                className={({ isActive }) =>
-                  cn(
-                    'flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors',
-                    isActive
-                      ? 'bg-primary text-primary-foreground'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-accent'
-                  )
-                }
-              >
-                <item.icon className="h-5 w-5 mr-3" />
-                {item.name}
-              </NavLink>
-            ))}
+          <nav className="flex-1 px-4 py-6 space-y-4">
+            <div className="space-y-2">
+              {navigation.map((item) => (
+                <NavLink
+                  key={item.name}
+                  to={item.href}
+                  className={({ isActive }) =>
+                    cn(
+                      'flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors',
+                      isActive
+                        ? 'bg-primary text-primary-foreground'
+                        : 'text-muted-foreground hover:text-foreground hover:bg-accent'
+                    )
+                  }
+                >
+                  <item.icon className="h-5 w-5 mr-3" />
+                  {item.name}
+                </NavLink>
+              ))}
+            </div>
+            
+            <div className="border-t border-border pt-4">
+              <div className="px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                Administration
+              </div>
+              <div className="space-y-2">
+                {adminNavigation.map((item) => (
+                  <NavLink
+                    key={item.name}
+                    to={item.href}
+                    className={({ isActive }) =>
+                      cn(
+                        'flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors',
+                        isActive
+                          ? 'bg-primary text-primary-foreground'
+                          : 'text-muted-foreground hover:text-foreground hover:bg-accent'
+                      )
+                    }
+                  >
+                    <item.icon className="h-5 w-5 mr-3" />
+                    {item.name}
+                  </NavLink>
+                ))}
+              </div>
+            </div>
           </nav>
         </div>
 
